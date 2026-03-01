@@ -59,16 +59,19 @@ app.use((req, res) => res.status(404).json({ success: false, message: 'Route not
 // Global error handler
 app.use(errorHandler);
 
-// Auto-seed admin
+// Auto-seed admin — always resets password to ensure correct bcrypt rounds
 const seedAdmin = async () => {
     try {
         const User = require('./models/User');
-        const existing = await User.findOne({ email: 'admin@bloodconnect.com' });
-        if (!existing) {
+        let admin = await User.findOne({ email: 'admin@bloodconnect.com' });
+        if (!admin) {
             await User.create({ name: 'Super Admin', email: 'admin@bloodconnect.com', password: 'Admin@1234', role: 'admin' });
-            console.log('✅ Admin seeded: admin@bloodconnect.com / Admin@1234');
+            console.log('✅ Admin created: admin@bloodconnect.com / Admin@1234');
         } else {
-            console.log('ℹ️  Admin ready: admin@bloodconnect.com');
+            // Always reset password to ensure it uses the current bcrypt rounds
+            admin.password = 'Admin@1234';
+            await admin.save();
+            console.log('✅ Admin password refreshed: admin@bloodconnect.com / Admin@1234');
         }
     } catch (e) { console.error('❌ Admin seed error:', e.message); }
 };

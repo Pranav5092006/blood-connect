@@ -65,10 +65,10 @@ const userSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Hash password before saving (Mongoose v8 compatible — async middleware resolves via Promise)
+// Hash password before saving — 8 rounds balances security with Render free tier CPU limits
 userSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(8);
     this.password = await bcrypt.hash(this.password, salt);
 });
 
