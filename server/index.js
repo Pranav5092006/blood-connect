@@ -1,0 +1,79 @@
+require('dotenv').config();
+const http = require('http');
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const connectDB = require('./config/db');
+const errorHandler = require('./middleware/errorHandler');
+const socketManager = require('./socket');
+
+const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+socketManager.init(server);
+
+// Security middleware
+app.use(helmet());
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    message: { success: false, message: 'Too many requests, please try again later.' },
+});
+app.use('/api', limiter);
+
+// Body parser
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/requests', require('./routes/requests'));
+app.use('/api/donors', require('./routes/donors'));
+app.use('/api/admin', require('./routes/admin'));
+
+// Health check
+app.get('/api/health', (req, res) => res.json({ success: true, message: 'Blood Connect API is running 🩸' }));
+
+// 404 handler
+app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
+
+// Global error handler
+app.use(errorHandler);
+
+// Auto-seed admin
+const seedAdmin = async () => {
+    try {
+        const User = require('./models/User');
+        const existing = await User.findOne({ email: 'admin@bloodconnect.com' });
+        if (!existing) {
+            await User.create({ name: 'Super Admin', email: 'admin@bloodconnect.com', password: 'Admin@1234', role: 'admin' });
+            console.log('✅ Admin seeded: admin@bloodconnect.com / Admin@1234');
+        } else {
+            console.log('ℹ️  Admin ready: admin@bloodconnect.com');
+        }
+    } catch (e) { console.error('❌ Admin seed error:', e.message); }
+};
+
+const startServer = async () => {
+    await connectDB();
+    await seedAdmin();
+
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => {
+        console.log(`\n🚀 Server running on http://localhost:${PORT}`);
+        console.log(`   Frontend: http://localhost:5173`);
+        console.log(`   Socket.io: enabled`);
+        console.log(`   Email:     ${process.env.EMAIL_USER}\n`);
+    });
+};
+
+startServer();
