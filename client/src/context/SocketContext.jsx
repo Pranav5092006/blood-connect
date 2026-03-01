@@ -20,8 +20,9 @@ export const SocketProvider = ({ children }) => {
             return;
         }
 
-        // Connect to the backend Socket.io server
-        const socket = io('http://localhost:5000', { withCredentials: true });
+        // Connect to backend Socket.io — use VITE_API_URL in production, localhost in dev
+        const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const socket = io(serverUrl, { withCredentials: true });
         socketRef.current = socket;
 
         socket.on('connect', () => {
