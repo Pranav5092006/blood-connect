@@ -115,6 +115,7 @@ const respondToRequest = async (req, res, next) => {
                     bloodGroup: request.bloodGroup,
                     hospital: request.hospital,
                     donorName: req.user.name,
+                    donorContact: req.user.contactNumber,
                 });
             }
             // Send email silently (don't block response)

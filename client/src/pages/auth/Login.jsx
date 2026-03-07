@@ -12,6 +12,7 @@ const ROLE_ROUTES = {
 
 const Login = () => {
     const [form, setForm] = useState({ email: '', password: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -29,8 +30,11 @@ const Login = () => {
             const from = location.state?.from?.pathname || ROLE_ROUTES[data.user.role] || '/';
             navigate(from, { replace: true });
         } catch (err) {
-            const msg = err.response?.data?.message || 'Login failed';
-            toast.error(msg);
+            if (!err.response) {
+                toast.error('Cannot reach server. Make sure the backend is running on port 5000.');
+            } else {
+                toast.error(err.response.data?.message || 'Login failed');
+            }
         } finally {
             setLoading(false);
         }
@@ -74,7 +78,12 @@ const Login = () => {
                                 <label className="form-label">Password</label>
                                 <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--crimson-light)' }}>Forgot password?</Link>
                             </div>
-                            <input className="form-input" name="password" type="password" value={form.password} onChange={handle} required placeholder="••••••••" />
+                            <div style={{ position: 'relative' }}>
+                                <input className="form-input" name="password" type={showPassword ? "text" : "password"} value={form.password} onChange={handle} required placeholder="••••••••" style={{ paddingRight: '2.5rem' }} />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.2rem', padding: '0.2rem' }}>
+                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading} style={{ marginTop: '0.5rem' }}>

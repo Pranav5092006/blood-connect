@@ -10,6 +10,7 @@ const Register = () => {
     const [searchParams] = useSearchParams();
     const [role, setRole] = useState(searchParams.get('role') || 'donor');
     const [form, setForm] = useState({ name: '', email: '', password: '', bloodGroup: '', city: '', age: '', contactNumber: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -27,8 +28,16 @@ const Register = () => {
             const routes = { donor: '/donor/dashboard', recipient: '/recipient/dashboard' };
             navigate(routes[data.user.role]);
         } catch (err) {
-            const msg = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Registration failed';
-            toast.error(msg);
+            if (!err.response) {
+                // Network error — server not running or unreachable
+                toast.error('Cannot reach server. Make sure the backend is running on port 5000.');
+            } else {
+                const data = err.response.data;
+                const msg = data?.message
+                    || data?.errors?.[0]?.msg
+                    || `Registration failed (${err.response.status})`;
+                toast.error(msg);
+            }
         } finally {
             setLoading(false);
         }
@@ -85,7 +94,12 @@ const Register = () => {
 
                         <div className="form-group">
                             <label className="form-label">Password * (min 6 chars)</label>
-                            <input className="form-input" name="password" type="password" value={form.password} onChange={handle} required placeholder="••••••••" />
+                            <div style={{ position: 'relative' }}>
+                                <input className="form-input" name="password" type={showPassword ? "text" : "password"} value={form.password} onChange={handle} required placeholder="••••••••" style={{ paddingRight: '2.5rem' }} />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.2rem', padding: '0.2rem' }}>
+                                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="form-grid">

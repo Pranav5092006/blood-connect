@@ -83,6 +83,7 @@ const forgotPassword = async (req, res, next) => {
 
         try {
             await sendPasswordResetEmail(user, rawToken);
+            console.log(`✅ Reset email sent to ${user.email} | Link: ${process.env.CLIENT_URL}/reset-password/${rawToken}`);
         } catch (emailErr) {
             console.error('Reset email error:', emailErr.message);
             user.resetPasswordToken = null;

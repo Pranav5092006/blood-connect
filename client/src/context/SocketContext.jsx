@@ -39,7 +39,8 @@ export const SocketProvider = ({ children }) => {
 
         // Recipient: listen for request acceptance
         socket.on('requestAccepted', (data) => {
-            const msg = `✅ ${data.donorName} accepted your ${data.bloodGroup} request at ${data.hospital}!`;
+            const contactInfo = data.donorContact ? ` Contact: ${data.donorContact}` : '';
+            const msg = `✅ ${data.donorName} accepted your ${data.bloodGroup} request at ${data.hospital}!${contactInfo}`;
             toast.success(msg, { duration: 8000 });
             setNotifications(prev => [{ id: Date.now(), type: 'accepted', text: msg, data, read: false }, ...prev.slice(0, 19)]);
         });
