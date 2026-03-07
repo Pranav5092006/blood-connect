@@ -27,7 +27,7 @@ const DonorDashboard = () => {
             const { data } = await userAPI.toggleAvailability();
             updateUser({ ...user, availability: data.availability });
             toast.success(data.message);
-        } catch { toast.error('Failed to update'); } finally { setToggling(false); }
+        } catch (err) { toast.error(err.response?.data?.message || 'Failed to update'); } finally { setToggling(false); }
     };
 
     const respond = async (id, action) => {

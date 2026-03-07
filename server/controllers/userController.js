@@ -19,7 +19,14 @@ const updateProfile = async (req, res, next) => {
         const allowedFields = ['name', 'city', 'age', 'contactNumber', 'bloodGroup', 'lastDonationDate'];
         const updates = {};
         allowedFields.forEach((field) => {
-            if (req.body[field] !== undefined) updates[field] = req.body[field];
+            if (req.body[field] !== undefined) {
+                // Handle empty strings sent from frontend to prevent Mongoose cast/enum errors
+                if ((field === 'bloodGroup' || field === 'lastDonationDate') && req.body[field] === '') {
+                    updates[field] = null;
+                } else {
+                    updates[field] = req.body[field];
+                }
+            }
         });
 
         const user = await User.findByIdAndUpdate(req.user._id, updates, {
@@ -38,13 +45,15 @@ const updateProfile = async (req, res, next) => {
 const toggleAvailability = async (req, res, next) => {
     try {
         const user = await User.findById(req.user._id);
-        user.availability = !user.availability;
-        await user.save();
+        const newAvailability = !user.availability;
+
+        // Bypass full document validation (avoids crash if old invalid data like empty bloodGroup exists)
+        await User.findByIdAndUpdate(req.user._id, { availability: newAvailability });
 
         res.json({
             success: true,
-            message: `Availability set to ${user.availability ? 'Available' : 'Unavailable'}`,
-            availability: user.availability,
+            message: `Availability set to ${newAvailability ? 'Available' : 'Unavailable'}`,
+            availability: newAvailability,
         });
     } catch (error) {
         next(error);

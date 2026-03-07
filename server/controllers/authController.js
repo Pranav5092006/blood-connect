@@ -22,7 +22,8 @@ const register = async (req, res, next) => {
         const user = await User.create({
             name, email, password,
             role: role === 'admin' ? 'recipient' : role,
-            bloodGroup, city, age, contactNumber,
+            bloodGroup: bloodGroup === '' ? undefined : bloodGroup,
+            city, age, contactNumber,
         });
 
         const token = generateToken(user._id);
